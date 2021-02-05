@@ -1,0 +1,244 @@
+<template>
+  <div style="margin-top: -50px">
+    <div style="margin-top: -25px; text-align: center; width: 420px;">
+      <div id="cpuChart" style="width: 420px;height:420px;"></div>
+      <h2 style="margin-top: -116px">CPU</h2>
+    </div>
+    <div style="margin-top: -25px; text-align: center; width: 420px;">
+      <div id="memChart" style="width: 420px;height:420px;"></div>
+      <h2 style="margin-top: -116px">内存</h2>
+    </div>
+  </div>
+</template>
+
+<script>
+import * as echarts from 'echarts';
+import axios from 'axios';
+
+export default {
+  name: 'HelloWorld',
+  mounted() {
+    this.drawChart();
+    this.updateDate();
+  },
+  methods: {
+    updateDate() {
+      const cpuChart = echarts.init(document.getElementById('cpuChart'));
+      const memChart = echarts.init(document.getElementById('memChart'));
+      window.setInterval(function() {
+        let cpuUsage = 0;
+        let memUsage = 0;
+        axios({
+          methods: 'get',
+          url: 'http://127.0.0.1:9527/v1/info'
+        })
+        .then(function (response) {
+          console.log(response.data);
+          cpuUsage = response.data['cpu'];
+          memUsage = response.data['mem'];
+          cpuChart.setOption({
+            series: [{
+              data: [{
+                value: cpuUsage
+              }]
+            }]
+          })
+          memChart.setOption({
+            series: [{
+              data: [{
+                value: memUsage
+              }]
+            }]
+          })
+        })
+      },2000)
+    },
+    drawChart() {
+      let cpuChart = echarts.init(document.getElementById('cpuChart'));
+      let memChart = echarts.init(document.getElementById('memChart'));
+      let option1;
+      let option2;
+
+      option1 = {
+        series: [{
+          type: 'gauge',
+          startAngle: 225,
+          endAngle: -45,
+          min: 0,
+          max: 100,
+          splitNumber: 10,
+          itemStyle: {
+            color: '#58D9F9',
+            shadowColor: 'rgba(0,138,255,0.45)',
+            shadowBlur: 10,
+            shadowOffsetX: 2,
+            shadowOffsetY: 2
+          },
+          progress: {
+            show: true,
+            roundCap: true,
+            width: 14
+          },
+          pointer: {
+            icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z',
+            length: '65%',
+            width: 12,
+            offsetCenter: [0, '5%']
+          },
+          axisLine: {
+            roundCap: true,
+            lineStyle: {
+              width: 14
+            }
+          },
+          axisTick: {
+            splitNumber: 2,
+            lineStyle: {
+              width: 1,
+              color: '#999'
+            }
+          },
+          splitLine: {
+            length: 9,
+            lineStyle: {
+              width: 2,
+              color: '#999'
+            }
+          },
+          axisLabel: {
+            distance: 22,
+            color: '#999',
+            fontSize: 15
+          },
+          title: {
+            show: false,
+            // text: 'CPU usage',
+          },
+          detail: {
+            backgroundColor: '#fff',
+            // borderColor: '#999',
+            // borderWidth: 0,
+            width: '60%',
+            lineHeight: 40,
+            height: 40,
+            // borderRadius: 8,
+            offsetCenter: [0, '35%'],
+            valueAnimation: true,
+            formatter: function (value) {
+              return '{value|' + value.toFixed(0) + '}{unit|%}';
+            },
+            rich: {
+              value: {
+                fontSize: 50,
+                fontWeight: 'bolder',
+                color: '#777'
+              },
+              unit: {
+                fontSize: 20,
+                color: '#999',
+                padding: [0, 0, -20, 10]
+              }
+            }
+          },
+          data: [{
+            value: 0
+          }]
+        }]
+      };
+      option2 = {
+        series: [{
+          type: 'gauge',
+          startAngle: 225,
+          endAngle: -45,
+          min: 0,
+          max: 100,
+          splitNumber: 10,
+          itemStyle: {
+            color: '#F97858',
+            shadowColor: 'rgba(255,119,0,0.45)',
+            shadowBlur: 10,
+            shadowOffsetX: 2,
+            shadowOffsetY: 2
+          },
+          progress: {
+            show: true,
+            roundCap: true,
+            width: 14
+          },
+          pointer: {
+            icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z',
+            length: '75%',
+            width: 12,
+            offsetCenter: [0, '5%']
+          },
+          axisLine: {
+            roundCap: true,
+            lineStyle: {
+              width: 14
+            }
+          },
+          axisTick: {
+            splitNumber: 2,
+            lineStyle: {
+              width: 1,
+              color: '#999'
+            }
+          },
+          splitLine: {
+            length: 9,
+            lineStyle: {
+              width: 2,
+              color: '#999'
+            }
+          },
+          axisLabel: {
+            distance: 22,
+            color: '#999',
+            fontSize: 15
+          },
+          title: {
+            show: false,
+            // text: 'CPU usage',
+          },
+          detail: {
+            backgroundColor: '#fff',
+            // borderColor: '#999',
+            // borderWidth: 0,
+            width: '60%',
+            lineHeight: 40,
+            height: 40,
+            // borderRadius: 8,
+            offsetCenter: [0, '35%'],
+            valueAnimation: true,
+            formatter: function (value) {
+              return '{value|' + value.toFixed(0) + '}{unit|%}';
+            },
+            rich: {
+              value: {
+                fontSize: 50,
+                fontWeight: 'bolder',
+                color: '#777'
+              },
+              unit: {
+                fontSize: 20,
+                color: '#999',
+                padding: [0, 0, -20, 10]
+              }
+            }
+          },
+          data: [{
+            value: 0
+          }]
+        }]
+      };
+
+      cpuChart.setOption(option1);
+      memChart.setOption(option2);
+    }
+  }
+}
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+</style>
