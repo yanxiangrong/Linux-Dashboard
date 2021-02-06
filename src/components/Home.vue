@@ -1,5 +1,5 @@
 <template>
-  <div style="margin-top: -50px">
+  <div style="display: flex; flex-direction: row">
     <div style="margin-top: -25px; text-align: center; width: 420px;">
       <div id="cpuChart" style="width: 420px;height:420px;"></div>
       <h2 style="margin-top: -116px">CPU</h2>
@@ -11,18 +11,15 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import {defineComponent, onMounted} from 'vue';
 import * as echarts from 'echarts';
 import axios from 'axios';
 
-export default {
-  name: 'HelloWorld',
-  mounted() {
-    this.drawChart();
-    this.updateDate();
-  },
-  methods: {
-    updateDate() {
+export default defineComponent({
+  name: 'Home',
+  setup: () => {
+    const updateDate = () => {
       const cpuChart = echarts.init(document.getElementById('cpuChart'));
       const memChart = echarts.init(document.getElementById('memChart'));
       window.setInterval(function() {
@@ -30,30 +27,30 @@ export default {
         let memUsage = 0;
         axios({
           methods: 'get',
-          url: 'http://127.0.0.1:9527/v1/info'
+          url: 'http://127.0.0.1:9527/v1/current'
         })
-        .then(function (response) {
-          console.log(response.data);
-          cpuUsage = response.data['cpu'];
-          memUsage = response.data['mem'];
-          cpuChart.setOption({
-            series: [{
-              data: [{
-                value: cpuUsage
-              }]
-            }]
-          })
-          memChart.setOption({
-            series: [{
-              data: [{
-                value: memUsage
-              }]
-            }]
-          })
-        })
+            .then(function (response) {
+              console.log(response.data);
+              cpuUsage = response.data['cpu_usage_per'];
+              memUsage = response.data['mem_usage_per'];
+              cpuChart.setOption({
+                series: [{
+                  data: [{
+                    value: cpuUsage
+                  }]
+                }]
+              })
+              memChart.setOption({
+                series: [{
+                  data: [{
+                    value: memUsage
+                  }]
+                }]
+              })
+            })
       },2000)
-    },
-    drawChart() {
+    }
+    const drawChart = () => {
       let cpuChart = echarts.init(document.getElementById('cpuChart'));
       let memChart = echarts.init(document.getElementById('memChart'));
       let option1;
@@ -167,7 +164,7 @@ export default {
           },
           pointer: {
             icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z',
-            length: '75%',
+            length: '65%',
             width: 12,
             offsetCenter: [0, '5%']
           },
@@ -235,8 +232,18 @@ export default {
       cpuChart.setOption(option1);
       memChart.setOption(option2);
     }
-  }
-}
+
+    onMounted(() => {
+      updateDate()
+      drawChart()
+    })
+    return {
+      updateDate,
+      drawChart
+    }
+  },
+})
+
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

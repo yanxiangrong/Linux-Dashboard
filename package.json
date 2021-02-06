@@ -1,5 +1,5 @@
 {
-  "name": "LinuxDashboard",
+  "name": "linux-dashboard",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
@@ -7,6 +7,7 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "axios": "^0.21.1",
     "vue": "^3.0.5"
   },
   "devDependencies": {
@@ -14,6 +15,7 @@
     "@vue/compiler-sfc": "^3.0.5",
     "@vuedx/typecheck": "^0.6.0",
     "@vuedx/typescript-plugin-vue": "^0.6.0",
+    "echarts": "^5.0.1",
     "typescript": "^4.1.3",
     "vite": "^2.0.0-beta.64"
   }
