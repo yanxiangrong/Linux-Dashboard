@@ -1,12 +1,23 @@
 <template>
-  <div style="display: flex; flex-direction: row">
-    <div style="margin-top: -25px; text-align: center; width: 420px;">
-      <div id="cpuChart" style="width: 420px;height:420px;"></div>
-      <h2 style="margin-top: -116px">CPU</h2>
+  <div style="display: flex; flex-direction: column">
+    <div style="display: flex; flex-direction: row">
+      <div style="margin-top: -25px; text-align: center; width: 420px;">
+        <div id="cpuChart" style="width: 420px;height:420px;"></div>
+        <h2 style="margin-top: -116px">CPU</h2>
+      </div>
+      <div style="margin-top: -25px; text-align: center; width: 420px;">
+        <div id="memChart" style="width: 420px;height:420px;"></div>
+        <h2 style="margin-top: -116px">内存</h2>
+      </div>
     </div>
-    <div style="margin-top: -25px; text-align: center; width: 420px;">
-      <div id="memChart" style="width: 420px;height:420px;"></div>
-      <h2 style="margin-top: -116px">内存</h2>
+
+    <div style="display: flex; flex-direction: row">
+      <div>
+        <div style="height: 420px; width: 630px" id="cpuHistory"></div>
+      </div>
+      <div>
+        <div style="height: 420px; width: 630px" id="memHistory"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -19,16 +30,20 @@ import axios from 'axios';
 export default defineComponent({
   name: 'Home',
   setup: () => {
-    const updateDate = () => {
-      const cpuChart = echarts.init(document.getElementById('cpuChart'));
-      const memChart = echarts.init(document.getElementById('memChart'));
-      window.setInterval(function() {
+    function updateDate() {
+      const cpuChartElem = document.getElementById('cpuChart')!;
+      const memChartElem = document.getElementById('memChart')!;
+      const cpuHistoryElem = document.getElementById('cpuHistory')!;
+      const memHistoryElem = document.getElementById('memHistory')!;
+      const cpuChart = echarts.init(cpuChartElem);
+      const memChart = echarts.init(memChartElem);
+      const cpuHistory = echarts.init(cpuHistoryElem);
+      const memHistory = echarts.init(memHistoryElem);
+
+      window.setInterval(function () {
         let cpuUsage = 0;
         let memUsage = 0;
-        axios({
-          methods: 'get',
-          url: 'http://127.0.0.1:9527/v1/current'
-        })
+        axios.get('http://127.0.0.1:9527/v1/current')
             .then(function (response) {
               console.log(response.data);
               cpuUsage = response.data['cpu_usage_per'];
@@ -48,15 +63,39 @@ export default defineComponent({
                 }]
               })
             })
-      },2000)
+      }, 2000)
+      window.setInterval(function () {
+        let cpuUsageList = [];
+        let memUsageList = [];
+        axios.get('http://127.0.0.1:9527/v1/history')
+            .then(function (response) {
+              console.log(response.data);
+              for (let i = 0; i < response.data.length; i++) {
+                cpuUsageList[i] = [i, response.data[i]['cpu_usage_per']];
+                memUsageList[i] = [i, response.data[i]['mem_usage_per']];
+              }
+              console.log(cpuUsageList)
+              cpuHistory.setOption({
+                series: [{
+                  data: cpuUsageList
+                }]
+              })
+              memHistory.setOption({
+                series: [{
+                  data: memUsageList
+                }]
+              })
+            })
+      }, 2000)
     }
-    const drawChart = () => {
-      let cpuChart = echarts.init(document.getElementById('cpuChart'));
-      let memChart = echarts.init(document.getElementById('memChart'));
-      let option1;
-      let option2;
 
-      option1 = {
+    function drawChart() {
+      let cpuChart = echarts.init(document.getElementById('cpuChart')!);
+      let memChart = echarts.init(document.getElementById('memChart')!);
+      let cpuHistory = echarts.init(document.getElementById('cpuHistory')!);
+      let memHistory = echarts.init(document.getElementById('memHistory')!);
+
+      let option1 = {
         series: [{
           type: 'gauge',
           startAngle: 225,
@@ -121,7 +160,7 @@ export default defineComponent({
             // borderRadius: 8,
             offsetCenter: [0, '35%'],
             valueAnimation: true,
-            formatter: function (value) {
+            formatter: function (value: number) {
               return '{value|' + value.toFixed(0) + '}{unit|%}';
             },
             rich: {
@@ -142,7 +181,7 @@ export default defineComponent({
           }]
         }]
       };
-      option2 = {
+      let option2 = {
         series: [{
           type: 'gauge',
           startAngle: 225,
@@ -207,7 +246,7 @@ export default defineComponent({
             // borderRadius: 8,
             offsetCenter: [0, '35%'],
             valueAnimation: true,
-            formatter: function (value) {
+            formatter: function (value: number) {
               return '{value|' + value.toFixed(0) + '}{unit|%}';
             },
             rich: {
@@ -228,9 +267,53 @@ export default defineComponent({
           }]
         }]
       };
+      let option3 = {
+        xAxis: {
+          type: 'time',
+          boundaryGap: false,
+        },
+        yAxis: {
+          min: 0,
+          max: 100,
+          name: '60秒内的利用率%',
+          type: 'value'
+        },
+        series: [{
+          data: [
+            [0, 0],
+          ],
+          type: 'line',
+          areaStyle: {},
+          symbol: 'none',
+          animation: false
+        }]
+      };
+      let option4 = {
+        xAxis: {
+          type: 'time',
+          boundaryGap: false,
+        },
+        yAxis: {
+          min: 0,
+          max: 100,
+          name: '内存使用量',
+          type: 'value'
+        },
+        series: [{
+          data: [
+            [0, 0],
+          ],
+          type: 'line',
+          areaStyle: {},
+          symbol: 'none',
+          animation: false
+        }]
+      };
 
       cpuChart.setOption(option1);
       memChart.setOption(option2);
+      cpuHistory.setOption(option3);
+      memHistory.setOption(option4);
     }
 
     onMounted(() => {
