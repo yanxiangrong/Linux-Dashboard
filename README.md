@@ -1,5 +1,5 @@
 # Linux-Dashboard
-前端框架: vite  
+前端框架: Vue3, Element+  
 后端框架: Gin  
 开发进度：
-![image](./images/222253.png)
+![image](./images/185828.png)

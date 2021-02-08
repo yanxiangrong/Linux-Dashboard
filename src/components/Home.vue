@@ -1,36 +1,40 @@
 <template>
   <div style="display: flex; flex-direction: column">
-    <div style="display: flex; flex-direction: row">
-      <div style="margin-top: -25px; text-align: center; width: 420px;">
-        <div id="cpuChart" style="width: 420px;height:420px;"></div>
-        <h2 style="margin-top: -116px">CPU</h2>
-      </div>
-      <div style="margin-top: -25px; text-align: center; width: 420px;">
-        <div id="memChart" style="width: 420px;height:420px;"></div>
-        <h2 style="margin-top: -116px">内存</h2>
+    <div class="box">
+      <div style="display: flex; flex-direction: row">
+        <div style="margin-top: -25px; text-align: center; width: 420px;">
+          <div id="cpuChart" style="width: 420px;height:420px;"></div>
+          <h2 style="margin-top: -116px">CPU</h2>
+        </div>
+        <div style="margin-top: -25px; text-align: center; width: 420px;">
+          <div id="memChart" style="width: 420px;height:420px;"></div>
+          <h2 style="margin-top: -116px">内存</h2>
+        </div>
       </div>
     </div>
 
-    <div style="display: flex; flex-direction: row">
-      <div>
-        <div style="height: 420px; width: 630px" id="cpuHistory"></div>
-      </div>
-      <div>
-        <div style="height: 420px; width: 630px" id="memHistory"></div>
+    <div class="box">
+      <div style="display: flex; flex-direction: row">
+        <div>
+          <div style="height: 420px; width: 630px" id="cpuHistory"></div>
+        </div>
+        <div>
+          <div style="height: 420px; width: 630px" id="memHistory"></div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import {defineComponent, onMounted} from 'vue';
+import {defineComponent} from 'vue';
 import * as echarts from 'echarts';
 import axios from 'axios';
 
 export default defineComponent({
-  name: 'Home',
-  setup: () => {
-    function updateDate() {
+  name: 'home',
+  methods: {
+    updateDate() {
       const cpuChartElem = document.getElementById('cpuChart')!;
       const memChartElem = document.getElementById('memChart')!;
       const cpuHistoryElem = document.getElementById('cpuHistory')!;
@@ -40,7 +44,7 @@ export default defineComponent({
       const cpuHistory = echarts.init(cpuHistoryElem);
       const memHistory = echarts.init(memHistoryElem);
 
-      window.setInterval(function () {
+      setInterval(function () {
         let cpuUsage = 0;
         let memUsage = 0;
         axios.get('http://127.0.0.1:9527/v1/current')
@@ -64,9 +68,9 @@ export default defineComponent({
               })
             })
       }, 2000)
-      window.setInterval(function () {
-        let cpuUsageList = [];
-        let memUsageList = [];
+      setInterval(function () {
+        let cpuUsageList: any[][] = [];
+        let memUsageList: any[][] = [];
         axios.get('http://127.0.0.1:9527/v1/history')
             .then(function (response) {
               console.log(response.data);
@@ -87,9 +91,9 @@ export default defineComponent({
               })
             })
       }, 2000)
-    }
+    },
 
-    function drawChart() {
+    drawChart() {
       let cpuChart = echarts.init(document.getElementById('cpuChart')!);
       let memChart = echarts.init(document.getElementById('memChart')!);
       let cpuHistory = echarts.init(document.getElementById('cpuHistory')!);
@@ -315,20 +319,20 @@ export default defineComponent({
       cpuHistory.setOption(option3);
       memHistory.setOption(option4);
     }
-
-    onMounted(() => {
-      updateDate()
-      drawChart()
-    })
-    return {
-      updateDate,
-      drawChart
-    }
   },
+  mounted() {
+    this.updateDate();
+    this.drawChart();
+  }
 })
 
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.box {
+  margin: 8px 10px 2px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
 </style>
