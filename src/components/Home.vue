@@ -1,14 +1,88 @@
 <template>
   <div style="display: flex; flex-direction: column">
     <div class="box">
-      <div style="display: flex; flex-direction: row">
-        <div style="margin-top: -25px; text-align: center; width: 420px;">
-          <div id="cpuChart" style="width: 420px;height:420px;"></div>
-          <h2 style="margin-top: -116px">CPU</h2>
+      <div style="display: flex; flex-direction: column">
+        <div style="display: flex; flex-direction: row">
+          <div style="margin-top: -25px; text-align: center; width: 420px;">
+            <div id="cpuChart" style="width: 420px;height:420px;"></div>
+            <h2 style="margin-top: -116px">CPU</h2>
+          </div>
+          <div style="margin-top: -25px; text-align: center; width: 420px;">
+            <div id="memChart" style="width: 420px;height:420px;"></div>
+            <h2 style="margin-top: -116px">内存</h2>
+          </div>
         </div>
-        <div style="margin-top: -25px; text-align: center; width: 420px;">
-          <div id="memChart" style="width: 420px;height:420px;"></div>
-          <h2 style="margin-top: -116px">内存</h2>
+        <div>
+          <el-row :gutter="20">
+            <el-col :span="4">
+              <span>系统主机名</span>
+            </el-col>
+            <el-col :span="8">
+              <span>{{ host.hostName }}</span>
+            </el-col>
+            <el-col :span="4">
+              <span>操作系统</span>
+            </el-col>
+            <el-col :span="8">
+              <span>{{ host.platform }}</span>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="4">
+              <span>系统时间</span>
+            </el-col>
+            <el-col :span="8">
+              <span>todo</span>
+            </el-col>
+            <el-col :span="4">
+              <span>内核</span>
+            </el-col>
+            <el-col :span="8">
+              <span>{{ host.os }}, {{ host.kernelArch }}</span>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="4">
+              <span>CPU 信息</span>
+            </el-col>
+            <el-col :span="8">
+              <span>{{ cpu.modelName }}, {{ cpu.cores }} 核心</span>
+            </el-col>
+            <el-col :span="4">
+              <span>系统在线时间</span>
+            </el-col>
+            <el-col :span="8">
+              <span>{{ host.uptime }}</span>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="4">
+              <span>正在运行的进程</span>
+            </el-col>
+            <el-col :span="8">
+              <span>{{ host.process }}</span>
+            </el-col>
+            <el-col :span="4">
+              <span>CPU 负载</span>
+            </el-col>
+            <el-col :span="8">
+              <span>{{ cpu.load1 }} (1分钟) {{ cpu.load5 }} (5分钟) {{ cpu.load15 }} (15分钟)</span>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="4">
+              <span>物理内存</span>
+            </el-col>
+            <el-col :span="8">
+              <span>已用 {{ memory.used }} / 空闲 {{ memory.free }} / 总计 {{ memory.total }}</span>
+            </el-col>
+            <el-col :span="4">
+              <span>本地磁盘空间</span>
+            </el-col>
+            <el-col :span="8">
+              <span>已用 {{ disk.used }} / 空闲 {{ disk.free }} / 总计 {{ disk.total }}</span>
+            </el-col>
+          </el-row>
         </div>
       </div>
     </div>
@@ -33,8 +107,44 @@ import axios from 'axios';
 
 export default defineComponent({
   name: 'home',
+  data() {
+    return {
+      cpu: {
+        cores: 0,
+        modelName: "unknown",
+        load1: 0,
+        load5: 0,
+        load15: 0,
+      },
+      memory: {
+        total: 0,
+        available: 0,
+        used: 0,
+        free: 0
+      },
+      host: {
+        hostName: "unknown",
+        uptime: 0,
+        process: 0,
+        os: "unknown",
+        kernelVersion: "unknown",
+        kernelArch: "unknown",
+        platform: "unknown",
+        platformVersion: "unknown"
+      },
+      disk: {
+        devices: "unknown",
+        mountPoint: "unknown",
+        fsType: "unknown",
+        total: 0,
+        used: 0,
+        free: 0
+      }
+    }
+  },
   methods: {
     updateDate() {
+      const _this = this;
       const cpuChartElem = document.getElementById('cpuChart')!;
       const memChartElem = document.getElementById('memChart')!;
       const cpuHistoryElem = document.getElementById('cpuHistory')!;
@@ -73,12 +183,12 @@ export default defineComponent({
         let memUsageList: any[][] = [];
         axios.get('http://127.0.0.1:9527/v1/history')
             .then(function (response) {
-              console.log(response.data);
+              // console.log(response.data);
               for (let i = 0; i < response.data.length; i++) {
                 cpuUsageList[i] = [i, response.data[i]['cpu_usage_per']];
                 memUsageList[i] = [i, response.data[i]['mem_usage_per']];
               }
-              console.log(cpuUsageList)
+              // console.log(cpuUsageList)
               cpuHistory.setOption({
                 series: [{
                   data: cpuUsageList
@@ -91,6 +201,37 @@ export default defineComponent({
               })
             })
       }, 2000)
+      setInterval(function () {
+        let cpuUsageList: any[][] = [];
+        let memUsageList: any[][] = [];
+        axios.get('http://127.0.0.1:9527/v1/moreInfo')
+            .then(function (response) {
+              _this.cpu.cores = response.data['cpu']['cores']
+              _this.cpu.modelName = response.data['cpu']['model_name']
+              _this.cpu.load1 = response.data['cpu']['load_1']
+              _this.cpu.load5 = response.data['cpu']['load_5']
+              _this.cpu.load15 = response.data['cpu']['load_15']
+              _this.memory.total = response.data['Memory']['total']
+              _this.memory.available = response.data['Memory']['available']
+              _this.memory.used = response.data['Memory']['used']
+              _this.memory.free = response.data['Memory']['free']
+              _this.host.hostName = response.data['Host']['host_name']
+              _this.host.uptime = response.data['Host']['uptime']
+              _this.host.process = response.data['Host']['process']
+              _this.host.os = response.data['Host']['os']
+              _this.host.kernelVersion = response.data['Host']['kernel_version']
+              _this.host.kernelArch = response.data['Host']['kernel_arch']
+              _this.host.platform = response.data['Host']['platform']
+              _this.host.platformVersion = response.data['Host']['platform_version']
+              _this.disk.devices = response.data['Disks'][0]['devices']
+              _this.disk.mountPoint = response.data['Disks'][0]['mount_point']
+              _this.disk.fsType = response.data['Disks'][0]['fs_type']
+              _this.disk.total = response.data['Disks'][0]['total']
+              _this.disk.used = response.data['Disks'][0]['used']
+              _this.disk.free = response.data['Disks'][0]['free']
+
+            })
+      }, 10000)
     },
 
     drawChart() {
