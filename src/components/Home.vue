@@ -1,19 +1,18 @@
 <template>
   <div style="display: flex; flex-direction: column">
     <div class="box">
+      <h3></h3>
       <div style="display: flex; flex-direction: column">
         <div style="display: flex; flex-direction: row">
           <div style="margin-top: -25px; text-align: center; width: 420px;">
             <div id="cpuChart" style="width: 420px;height:420px;"></div>
-            <h2 style="margin-top: -116px">CPU</h2>
           </div>
           <div style="margin-top: -25px; text-align: center; width: 420px;">
             <div id="memChart" style="width: 420px;height:420px;"></div>
-            <h2 style="margin-top: -116px">内存</h2>
           </div>
         </div>
-        <div>
-          <el-row :gutter="20">
+        <div class="table">
+          <el-row style="padding: 5px 1px 5px 5px" :gutter="20">
             <el-col :span="4">
               <span>系统主机名</span>
             </el-col>
@@ -27,7 +26,7 @@
               <span>{{ host.platform }}</span>
             </el-col>
           </el-row>
-          <el-row :gutter="20">
+          <el-row style="padding: 5px 1px 5px 5px" :gutter="20">
             <el-col :span="4">
               <span>系统时间</span>
             </el-col>
@@ -41,7 +40,7 @@
               <span>{{ host.os }}, {{ host.kernelArch }}</span>
             </el-col>
           </el-row>
-          <el-row :gutter="20">
+          <el-row style="padding: 5px 1px 5px 5px" :gutter="20">
             <el-col :span="4">
               <span>CPU 信息</span>
             </el-col>
@@ -52,10 +51,10 @@
               <span>系统在线时间</span>
             </el-col>
             <el-col :span="8">
-              <span>{{ host.uptime }}</span>
+              <span>{{ timeToFormat(host.uptime) }}</span>
             </el-col>
           </el-row>
-          <el-row :gutter="20">
+          <el-row style="padding: 5px 1px 5px 5px" :gutter="20">
             <el-col :span="4">
               <span>正在运行的进程</span>
             </el-col>
@@ -66,21 +65,21 @@
               <span>CPU 负载</span>
             </el-col>
             <el-col :span="8">
-              <span>{{ cpu.load1 }} (1分钟) {{ cpu.load5 }} (5分钟) {{ cpu.load15 }} (15分钟)</span>
+              <span>{{ cpu.load1.toFixed(2) }} (1分钟) {{ cpu.load5.toFixed(2) }} (5分钟) {{ cpu.load15.toFixed(2) }} (15分钟)</span>
             </el-col>
           </el-row>
-          <el-row :gutter="20">
+          <el-row style="padding: 5px 1px 5px 5px" :gutter="20">
             <el-col :span="4">
               <span>物理内存</span>
             </el-col>
             <el-col :span="8">
-              <span>已用 {{ memory.used }} / 空闲 {{ memory.free }} / 总计 {{ memory.total }}</span>
+              <span>已用 {{ byteToFormat(memory.used) }} / 空闲 {{ byteToFormat(memory.free) }} / 总计 {{ byteToFormat(memory.total) }}</span>
             </el-col>
             <el-col :span="4">
               <span>本地磁盘空间</span>
             </el-col>
             <el-col :span="8">
-              <span>已用 {{ disk.used }} / 空闲 {{ disk.free }} / 总计 {{ disk.total }}</span>
+              <span>已用 {{ byteToFormat(disk.used) }} / 空闲 {{ byteToFormat(disk.free) }} / 总计 {{ byteToFormat(disk.total) }}</span>
             </el-col>
           </el-row>
         </div>
@@ -239,15 +238,9 @@ export default defineComponent({
       let memChart = echarts.init(document.getElementById('memChart')!);
       let cpuHistory = echarts.init(document.getElementById('cpuHistory')!);
       let memHistory = echarts.init(document.getElementById('memHistory')!);
-
       let option1 = {
         series: [{
           type: 'gauge',
-          startAngle: 225,
-          endAngle: -45,
-          min: 0,
-          max: 100,
-          splitNumber: 10,
           itemStyle: {
             color: '#58D9F9',
             shadowColor: 'rgba(0,138,255,0.45)',
@@ -289,35 +282,30 @@ export default defineComponent({
           axisLabel: {
             distance: 22,
             color: '#999',
-            fontSize: 15
-          },
-          title: {
-            show: false,
-            // text: 'CPU usage',
+            fontSize: 15,
+            fontFamily: 'Roboto',
           },
           detail: {
-            backgroundColor: '#fff',
-            // borderColor: '#999',
-            // borderWidth: 0,
-            width: '60%',
-            lineHeight: 40,
-            height: 40,
-            // borderRadius: 8,
-            offsetCenter: [0, '35%'],
             valueAnimation: true,
             formatter: function (value: number) {
-              return '{value|' + value.toFixed(0) + '}{unit|%}';
+              return '{value|' + value.toFixed(0) + '}{unit|%}\n{name|CPU}';
             },
             rich: {
               value: {
+                fontFamily: 'Roboto',
                 fontSize: 50,
-                fontWeight: 'bolder',
                 color: '#777'
               },
               unit: {
                 fontSize: 20,
                 color: '#999',
                 padding: [0, 0, -20, 10]
+              },
+              name: {
+                fontSize: 24,
+                fontWeight: 500,
+                color: '#777',
+                padding:[100, 0, 0, 0]
               }
             }
           },
@@ -329,11 +317,6 @@ export default defineComponent({
       let option2 = {
         series: [{
           type: 'gauge',
-          startAngle: 225,
-          endAngle: -45,
-          min: 0,
-          max: 100,
-          splitNumber: 10,
           itemStyle: {
             color: '#F97858',
             shadowColor: 'rgba(255,119,0,0.45)',
@@ -375,35 +358,30 @@ export default defineComponent({
           axisLabel: {
             distance: 22,
             color: '#999',
-            fontSize: 15
-          },
-          title: {
-            show: false,
-            // text: 'CPU usage',
+            fontSize: 15,
+            fontFamily: 'Roboto',
           },
           detail: {
-            backgroundColor: '#fff',
-            // borderColor: '#999',
-            // borderWidth: 0,
-            width: '60%',
-            lineHeight: 40,
-            height: 40,
-            // borderRadius: 8,
-            offsetCenter: [0, '35%'],
             valueAnimation: true,
             formatter: function (value: number) {
-              return '{value|' + value.toFixed(0) + '}{unit|%}';
+              return '{value|' + value.toFixed(0) + '}{unit|%}\n{name|内存}';
             },
             rich: {
               value: {
+                fontFamily: 'Roboto',
                 fontSize: 50,
-                fontWeight: 'bolder',
                 color: '#777'
               },
               unit: {
                 fontSize: 20,
                 color: '#999',
                 padding: [0, 0, -20, 10]
+              },
+              name: {
+                fontSize: 24,
+                fontWeight: 500,
+                color: '#777',
+                padding:[100, 0, 0, 0]
               }
             }
           },
@@ -459,7 +437,35 @@ export default defineComponent({
       memChart.setOption(option2);
       cpuHistory.setOption(option3);
       memHistory.setOption(option4);
-    }
+    },
+
+    byteToFormat(bytes) {
+      let unit = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
+      let i = 0;
+      while (bytes >= 1024) {
+        bytes /= 1024.0;
+        i++;
+      }
+      return bytes.toFixed(2) + ' ' + unit[i];
+    },
+
+    timeToFormat(time) {
+      let days, hours, minutes, string;
+      time = Math.floor(time / 60);
+      minutes = time % 60;
+      time = Math.floor(time / 60);
+      hours = time % 24;
+      time = Math.floor(time / 24);
+      days = time;
+      string = minutes + ' 分钟';
+      if (hours > 0) {
+        string = hours + ' 小时, ' + string;
+      }
+      if (days > 0) {
+        string = days + ' 天, ' + string;
+      }
+      return string;
+    },
   },
   mounted() {
     this.updateDate();
@@ -471,9 +477,19 @@ export default defineComponent({
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
 .box {
+  padding: 10px;
   margin: 8px 10px 2px 10px;
   border-radius: 4px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.table {
+  font-family: 'Roboto', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 19px;
 }
 </style>
